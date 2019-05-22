@@ -1,0 +1,3 @@
+out_cloudwatch_logs.h
+out_cloudwatch_logs.so
+coverage.txt
