@@ -26,8 +26,8 @@ before_test:
 
 test_script:
   - go test ./... -v
-  - go build -buildmode=c-shared -o out_cloudwatch-logs.dll .
-  - 7z a fluent-bit-go-cloudwatch-logs-%PLATFORM%.zip out_cloudwatch-logs.dll
+  - go build -buildmode=c-shared -o out_cloudwatch_logs.dll .
+  - 7z a fluent-bit-go-cloudwatch-logs-%PLATFORM%.zip out_cloudwatch_logs.dll
   - set ARTIFACT=fluent-bit-go-cloudwatch-logs-%PLATFORM%.zip
 
 on_success:
