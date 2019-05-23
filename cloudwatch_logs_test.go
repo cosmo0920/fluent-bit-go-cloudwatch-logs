@@ -38,7 +38,7 @@ func TestGetS3ConfigSharedCredentials(t *testing.T) {
 }
 
 func TestStateFileFor(t *testing.T) {
-	logStream := "example" + string(os.PathSeparator) + "Log" + string(os.PathSeparator) + "stream"
+	logStream := "example/Log/stream"
 	conf, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplelogGroup", logStream, "exampleregion", "", "examplestatefile")
 	if err != nil {
 		t.Fatalf("failed test %#v", err)
@@ -50,7 +50,7 @@ func TestStateFileFor(t *testing.T) {
 
 func TestStateFileReadWrite(t *testing.T) {
 	sequenceTokenCtx = ""
-	logStream := "example" + string(os.PathSeparator) + "Log" + string(os.PathSeparator) + "stream"
+	logStream := "example/Log/stream"
 	conf, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplelogGroup", logStream, "exampleregion", "", "examplestatefile")
 	if err != nil {
 		t.Fatalf("failed test %#v", err)

@@ -225,7 +225,7 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 }
 
 func stateFileFor(stateFile, logStreamName string) string {
-	path := strings.Replace(logStreamName, string(os.PathSeparator), "-", -1)
+	path := strings.Replace(logStreamName, "/", "-", -1)
 	return fmt.Sprintf("%s_%s", stateFile, path)
 }
 
