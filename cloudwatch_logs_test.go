@@ -38,7 +38,8 @@ func TestGetS3ConfigSharedCredentials(t *testing.T) {
 }
 
 func TestStateFileFor(t *testing.T) {
-	conf, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplelogGroup", "example/Log/stream", "exampleregion", "", "examplestatefile")
+	logStream := "example" + string(os.PathSeparator) + "Log" + string(os.PathSeparator) + "stream"
+	conf, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplelogGroup", logStream, "exampleregion", "", "examplestatefile")
 	if err != nil {
 		t.Fatalf("failed test %#v", err)
 	}
@@ -49,15 +50,16 @@ func TestStateFileFor(t *testing.T) {
 
 func TestStateFileReadWrite(t *testing.T) {
 	sequenceTokenCtx = ""
-	conf, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplelogGroup", "example/Log/stream", "exampleregion", "", "examplestatefile")
+	logStream := "example" + string(os.PathSeparator) + "Log" + string(os.PathSeparator) + "stream"
+	conf, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplelogGroup", logStream, "exampleregion", "", "examplestatefile")
 	if err != nil {
 		t.Fatalf("failed test %#v", err)
 	}
 	stateFile := stateFileFor(*conf.stateFile, *conf.logStreamName)
 
 	nextSequenceToken := "1234567890"
-	storeStateToken("examplestatefile", "example/Log/stream", nextSequenceToken)
-	result := readStateToken("examplestatefile", "example/Log/stream")
+	storeStateToken("examplestatefile", logStream, nextSequenceToken)
+	result := readStateToken("examplestatefile", logStream)
 
 	defer os.Remove(stateFile)
 
