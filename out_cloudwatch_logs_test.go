@@ -50,6 +50,7 @@ type testFluentPlugin struct {
 	logStreamName    string
 	region           string
 	autoCreateStream string
+	stateFile        string
 	records          []testrecord
 	position         int
 	events           []*events
@@ -71,6 +72,8 @@ func (p *testFluentPlugin) PluginConfigKey(ctx unsafe.Pointer, key string) strin
 		return p.region
 	case "AutoCreateStream":
 		return p.autoCreateStream
+	case "StateFile":
+		return p.stateFile
 	}
 	return "unknown-" + key
 }
@@ -139,7 +142,7 @@ func (c *testCloudwatchLogsCredential) GetCredentials(accessID, secretkey, crede
 
 func TestPluginInitializationWithStaticCredentials(t *testing.T) {
 	cloudwatchLogsCreds = &testCloudwatchLogsCredential{}
-	_, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplegroup", "examplestream", "exampleregion", "")
+	_, err := getCloudWatchLogsConfig("exampleaccessID", "examplesecretkey", "", "examplegroup", "examplestream", "exampleregion", "", "")
 	if err != nil {
 		t.Fatalf("failed test %#v", err)
 	}
@@ -150,6 +153,7 @@ func TestPluginInitializationWithStaticCredentials(t *testing.T) {
 		logStreamName:    "examplestream",
 		region:           "exampleregion",
 		autoCreateStream: "true",
+		stateFile:        "",
 	}
 	res := FLBPluginInit(nil)
 	assert.Equal(t, output.FLB_OK, res)
@@ -157,7 +161,7 @@ func TestPluginInitializationWithStaticCredentials(t *testing.T) {
 
 func TestPluginInitializationWithSharedCredentials(t *testing.T) {
 	cloudwatchLogsCreds = &testCloudwatchLogsCredential{}
-	_, err := getCloudWatchLogsConfig("", "", "examplecredentials", "examplegroup", "examplestream", "exampleregion", "true")
+	_, err := getCloudWatchLogsConfig("", "", "examplecredentials", "examplegroup", "examplestream", "exampleregion", "true", "")
 	if err != nil {
 		t.Fatalf("failed test %#v", err)
 	}
@@ -167,6 +171,7 @@ func TestPluginInitializationWithSharedCredentials(t *testing.T) {
 		logStreamName:    "examplestream",
 		region:           "exampleregion",
 		autoCreateStream: "true",
+		stateFile:        "",
 	}
 	res := FLBPluginInit(nil)
 	assert.Equal(t, output.FLB_OK, res)
