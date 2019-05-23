@@ -44,14 +44,14 @@ add this section to fluent-bit.conf
 
 ```properties
 [Output]
-    Name s3
+    Name cloudwatch_logs
     Match *
     # Credential    /path/to/sharedcredentialfile
     AccessKeyID     yourawsaccesskeyid
     SecretAccessKey yourawssecretaccesskey
     LogGroupName    yourloggroupname
     LogStreamName   yourslogstreamname
-    S3Region us-east-1
+    Region us-east-1
     # AutoCreateStream false # default: true
     # StateFile     yourstatefile
 ```
