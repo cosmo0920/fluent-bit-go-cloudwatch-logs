@@ -187,7 +187,7 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 	fmt.Printf("[flb-go] plugin logStreamName parameter = '%s'\n", logStreamName)
 	fmt.Printf("[flb-go] plugin region parameter = '%s'\n", region)
 	fmt.Printf("[flb-go] plugin autoCreateStream parameter = '%s'\n", autoCreateStream)
-	fmt.Printf("[flb-go] plugin staetFile parameter = '%s'\n", stateFile)
+	fmt.Printf("[flb-go] plugin stateFile parameter = '%s'\n", stateFile)
 
 	sess := session.New(&aws.Config{
 		Credentials: config.credentials,
