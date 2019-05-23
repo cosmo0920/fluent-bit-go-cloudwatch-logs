@@ -10,11 +10,11 @@ Provide example config and message
 
 ...
 
-#### Using Fluentd and S3 plugin versions
+#### Using Fluentd and CloudWatch plugin versions
 
 * OS version
 * Bare Metal or within Docker or Kubernetes or others?
 * fluent-bit version
   * paste result of ``fluent-bit --version`` or ``td-agent-bin --version``
-* fluent-bit-go-s3 version
+* fluent-bit-go-cloudwatch-logs version
   * paste boot log of fluent-bit or td-agent-bit
