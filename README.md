@@ -1,5 +1,7 @@
 # fluent-bit cloudwatch-logs output plugin
 
+[![Build Status](https://travis-ci.org/cosmo0920/fluent-bit-go-cloudwatch-logs.svg?branch=master)](https://travis-ci.org/cosmo0920/fluent-bit-go-cloudwatch-logs)
+
 This plugin works with fluent-bit's go plugin interface. You can use fluent-bit-go-cloudwatch-logs to ship logs into AWS CloudWatch.
 
 The configuration typically looks like:
