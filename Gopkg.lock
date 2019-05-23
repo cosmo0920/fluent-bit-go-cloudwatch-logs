@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:049548d693d023f81a4e98e3aff196bace074351fc1b8a4250817aec826e4436"
+  digest = "1:cf0dba30259974b8190988f1aab4078cca71c8b1bf5c25c4cb82063523ed5fa7"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -24,25 +24,18 @@
     "aws/session",
     "aws/signer/v4",
     "internal/ini",
-    "internal/s3err",
     "internal/sdkio",
     "internal/sdkrand",
     "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
-    "private/protocol/eventstream",
-    "private/protocol/eventstream/eventstreamapi",
     "private/protocol/json/jsonutil",
     "private/protocol/jsonrpc",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
-    "private/protocol/restxml",
     "private/protocol/xml/xmlutil",
     "service/cloudwatchlogs",
-    "service/s3",
-    "service/s3/s3iface",
-    "service/s3/s3manager",
     "service/sts",
   ]
   pruneopts = "UT"
@@ -64,14 +57,6 @@
   packages = ["output"]
   pruneopts = "UT"
   revision = "66fb080444ac8723343d6afeea56c8dce604cc9a"
-
-[[projects]]
-  digest = "1:582b704bebaa06b48c29b0cec224a6058a09c86883aaddabde889cd1a5f73e1b"
-  name = "github.com/google/uuid"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0cd6bf5da1e1c83f8b45653022c74f71af0538a4"
-  version = "v1.1.1"
 
 [[projects]]
   digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
@@ -133,12 +118,11 @@
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-sdk-go/aws",
+    "github.com/aws/aws-sdk-go/aws/awserr",
     "github.com/aws/aws-sdk-go/aws/credentials",
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/cloudwatchlogs",
-    "github.com/aws/aws-sdk-go/service/s3/s3manager",
     "github.com/fluent/fluent-bit-go/output",
-    "github.com/google/uuid",
     "github.com/json-iterator/go",
     "github.com/stretchr/testify/assert",
   ]
