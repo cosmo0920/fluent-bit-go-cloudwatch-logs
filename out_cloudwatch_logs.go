@@ -25,10 +25,6 @@ type cloudWatchLogsConf struct {
 }
 
 var configCtx *cloudWatchLogsConf
-
-var cloudwatchLogsGroupName string
-var cloudwatchLogsStreamName string
-var cloudwatchLogsAutoCreateStream bool
 var sequenceTokenCtx = ""
 
 type GoOutputPlugin interface {
