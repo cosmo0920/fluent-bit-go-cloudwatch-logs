@@ -100,7 +100,7 @@ func (p *fluentPlugin) Put(timestamp time.Time, line string, sequenceToken strin
 }
 
 func (p *fluentPlugin) CheckLogGroupsExistence(logGroupName string) bool {
-	params := &cloudwatchlogs.DescribeLogGroupsInput {
+	params := &cloudwatchlogs.DescribeLogGroupsInput{
 		LogGroupNamePrefix: aws.String(logGroupName), // Required
 	}
 	resp, err := cloudwatchLogs.DescribeLogGroups(params)
@@ -120,9 +120,9 @@ func (p *fluentPlugin) CheckLogGroupsExistence(logGroupName string) bool {
 	return false
 }
 
-func (p *fluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName string) (bool ,string){
-	params := &cloudwatchlogs.DescribeLogStreamsInput {
-		LogGroupName: aws.String(logGroupName),
+func (p *fluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName string) (bool, string) {
+	params := &cloudwatchlogs.DescribeLogStreamsInput{
+		LogGroupName:        aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(logStreamName), // Required
 	}
 	resp, err := cloudwatchLogs.DescribeLogStreams(params)
