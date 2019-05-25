@@ -53,7 +53,7 @@ func (c *cloudwatchLogsPluginConfig) GetCredentials(accessKeyID, secretKey, cred
 	return nil, fmt.Errorf("Failed to create credentials")
 }
 
-func getCloudWatchLogsConfig(accessID, secretKey, credential, logGroupName, logStreamName, region, autoCreateStream, stateFile string) (*cloudwatchLogsConfig, error) {
+func getCloudWatchLogsConfig(accessID, secretKey, credential, logGroupName, logStreamName, region, autoCreateStream string) (*cloudwatchLogsConfig, error) {
 	conf := &cloudwatchLogsConfig{}
 	creds, err := cloudwatchLogsCreds.GetCredentials(accessID, secretKey, credential)
 	if err != nil {
@@ -84,13 +84,6 @@ func getCloudWatchLogsConfig(accessID, secretKey, credential, logGroupName, logS
 		conf.autoCreateStream = true
 	} else {
 		conf.autoCreateStream = ok
-	}
-
-	// optional
-	if stateFile == "" {
-		conf.stateFile = aws.String("")
-	} else {
-		conf.stateFile = aws.String(stateFile)
 	}
 
 	return conf, nil

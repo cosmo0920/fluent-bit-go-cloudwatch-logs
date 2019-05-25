@@ -10,9 +10,7 @@ import "github.com/aws/aws-sdk-go/aws/session"
 import (
 	"C"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"strings"
 	"time"
 	"unsafe"
 )
@@ -24,7 +22,6 @@ type cloudWatchLogsConf struct {
 	logGroupName     string
 	logStreamName    string
 	autoCreateStream bool
-	stateFile        string
 }
 
 var configCtx *cloudWatchLogsConf
@@ -41,7 +38,7 @@ type GoOutputPlugin interface {
 	NewDecoder(data unsafe.Pointer, length int) *output.FLBDecoder
 	Put(timestamp time.Time, line, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error)
 	CheckLogGroupsExistence(logGroupName string) bool
-	CheckLogStreamsExistence(logGroupName, logStreamName string) bool
+	CheckLogStreamsExistence(logGroupName, logStreamName string) (bool, string)
 	CreateLogGroup(logGroupName string) error
 	CreateLogStream(logGroupName, logStreamName string) error
 	Exit(code int)
@@ -127,7 +124,7 @@ func (p *fluentPlugin) CheckLogGroupsExistence(logGroupName string) bool {
 	return false
 }
 
-func (p *fluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName string) bool {
+func (p *fluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName string) (bool ,string){
 	params := &cloudwatchlogs.DescribeLogStreamsInput {
 		LogGroupName: aws.String(logGroupName),
 		LogStreamNamePrefix: aws.String(logStreamName), // Required
@@ -135,18 +132,23 @@ func (p *fluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName stri
 	resp, err := cloudwatchLogs.DescribeLogStreams(params)
 	if err != nil {
 		fmt.Printf("Error: %v\n", err)
-		return false
+		return false, ""
 	}
 
 	logStreams := resp.LogStreams
 
 	for _, logStream := range logStreams {
 		if logStreamName == *logStream.LogStreamName {
-			return true
+			nextToken := *logStream.UploadSequenceToken
+			if nextToken != "" {
+				return true, nextToken
+			} else {
+				return false, ""
+			}
 		}
 	}
 
-	return false
+	return false, ""
 }
 
 func (p *fluentPlugin) CreateLogGroup(logGroupName string) error {
@@ -217,9 +219,8 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 	logGroupName := plugin.PluginConfigKey(ctx, "LogStreamName")
 	region := plugin.PluginConfigKey(ctx, "Region")
 	autoCreateStream := plugin.PluginConfigKey(ctx, "AutoCreateStream")
-	stateFile := plugin.PluginConfigKey(ctx, "StateFile")
 
-	config, err := getCloudWatchLogsConfig(accessKeyID, secretAccessKey, credential, logGroupName, logStreamName, region, autoCreateStream, stateFile)
+	config, err := getCloudWatchLogsConfig(accessKeyID, secretAccessKey, credential, logGroupName, logStreamName, region, autoCreateStream)
 	if err != nil {
 		plugin.Unregister(ctx)
 		plugin.Exit(1)
@@ -232,7 +233,6 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 	fmt.Printf("[flb-go] plugin logStreamName parameter = '%s'\n", logStreamName)
 	fmt.Printf("[flb-go] plugin region parameter = '%s'\n", region)
 	fmt.Printf("[flb-go] plugin autoCreateStream parameter = '%s'\n", autoCreateStream)
-	fmt.Printf("[flb-go] plugin stateFile parameter = '%s'\n", stateFile)
 
 	sess := session.New(&aws.Config{
 		Credentials: config.credentials,
@@ -244,7 +244,6 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 		logGroupName:     *config.logGroupName,
 		logStreamName:    *config.logStreamName,
 		autoCreateStream: config.autoCreateStream,
-		stateFile:        *config.stateFile,
 	}
 
 	if configCtx.autoCreateStream {
@@ -257,7 +256,9 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 	}
 
 	if configCtx.autoCreateStream {
-		if !plugin.CheckLogStreamsExistence(configCtx.logGroupName, configCtx.logStreamName) {
+		if doesExist, nextToken := plugin.CheckLogStreamsExistence(configCtx.logGroupName, configCtx.logStreamName); doesExist {
+			sequenceTokenCtx = nextToken
+		} else {
 			err := plugin.CreateLogStream(configCtx.logGroupName, configCtx.logStreamName)
 			if err != nil {
 				fmt.Printf("Failed to create logStream. error: %v\n", err)
@@ -265,41 +266,7 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 		}
 	}
 
-	nextToken := readStateToken(configCtx.stateFile, configCtx.logStreamName)
-	if nextToken != "" {
-		sequenceTokenCtx = nextToken
-	}
-
 	return output.FLB_OK
-}
-
-func stateFileFor(stateFile, logStreamName string) string {
-	path := strings.Replace(logStreamName, "/", "-", -1)
-	return fmt.Sprintf("%s_%s", stateFile, path)
-}
-
-func readStateToken(stateFile, logStreamName string) string {
-	filename := stateFileFor(stateFile, logStreamName)
-	_, err := os.Stat(filename)
-	if err != nil {
-		return ""
-	}
-	content, err := ioutil.ReadFile(filename)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-		return ""
-	}
-
-	return strings.Trim(string(content), "\r\n")
-}
-
-func storeStateToken(stateFile, logStreamName, nextSequenceToken string) {
-	message := []byte(nextSequenceToken)
-	filename := stateFileFor(stateFile, logStreamName)
-	err := ioutil.WriteFile(filename, message, 0644)
-	if err != nil {
-		fmt.Printf("Error: %v\n", err)
-	}
 }
 
 //export FLBPluginFlush
@@ -340,9 +307,6 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 			return output.FLB_RETRY
 		}
 		sequenceTokenCtx = nextSequenceToken(resp)
-		if configCtx.stateFile != "" {
-			storeStateToken(configCtx.stateFile, configCtx.logStreamName, sequenceTokenCtx)
-		}
 	}
 
 	// Return options:
