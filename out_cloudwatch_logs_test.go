@@ -96,6 +96,14 @@ func (p *testFluentPlugin) Put(timestamp time.Time, line string, sequenceToken s
 	return nil, nil
 }
 
+func (p *testFluentPlugin) CheckLogGroupsExistence(logGroupName string) bool {
+	return true
+}
+
+func (p *testFluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName string) bool {
+	return true
+}
+
 func (p *testFluentPlugin) CreateLogGroup(logGroupName string) error {
 	return nil
 }

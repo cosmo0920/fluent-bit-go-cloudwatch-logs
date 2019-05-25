@@ -40,6 +40,8 @@ type GoOutputPlugin interface {
 	GetRecord(dec *output.FLBDecoder) (ret int, ts interface{}, rec map[interface{}]interface{})
 	NewDecoder(data unsafe.Pointer, length int) *output.FLBDecoder
 	Put(timestamp time.Time, line, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error)
+	CheckLogGroupsExistence(logGroupName string) bool
+	CheckLogStreamsExistence(logGroupName, logStreamName string) bool
 	CreateLogGroup(logGroupName string) error
 	CreateLogStream(logGroupName, logStreamName string) error
 	Exit(code int)
@@ -102,6 +104,49 @@ func (p *fluentPlugin) Put(timestamp time.Time, line string, sequenceToken strin
 	}
 
 	return resp, nil
+}
+
+func (p *fluentPlugin) CheckLogGroupsExistence(logGroupName string) bool {
+	params := &cloudwatchlogs.DescribeLogGroupsInput {
+		LogGroupNamePrefix: aws.String(logGroupName), // Required
+	}
+	resp, err := cloudwatchLogs.DescribeLogGroups(params)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return false
+	}
+
+	logGroups := resp.LogGroups
+
+	for _, logGroup := range logGroups {
+		if logGroupName == *logGroup.LogGroupName {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (p *fluentPlugin) CheckLogStreamsExistence(logGroupName, logStreamName string) bool {
+	params := &cloudwatchlogs.DescribeLogStreamsInput {
+		LogGroupName: aws.String(logGroupName),
+		LogStreamNamePrefix: aws.String(logStreamName), // Required
+	}
+	resp, err := cloudwatchLogs.DescribeLogStreams(params)
+	if err != nil {
+		fmt.Printf("Error: %v\n", err)
+		return false
+	}
+
+	logStreams := resp.LogStreams
+
+	for _, logStream := range logStreams {
+		if logStreamName == *logStream.LogStreamName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (p *fluentPlugin) CreateLogGroup(logGroupName string) error {
@@ -203,16 +248,20 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 	}
 
 	if configCtx.autoCreateStream {
-		err := plugin.CreateLogGroup(configCtx.logGroupName)
-		if err != nil {
-			fmt.Printf("Failed to create logGroup. error: %v\n", err)
+		if !plugin.CheckLogGroupsExistence(configCtx.logGroupName) {
+			err := plugin.CreateLogGroup(configCtx.logGroupName)
+			if err != nil {
+				fmt.Printf("Failed to create logGroup. error: %v\n", err)
+			}
 		}
 	}
 
 	if configCtx.autoCreateStream {
-		err := plugin.CreateLogStream(configCtx.logGroupName, configCtx.logStreamName)
-		if err != nil {
-			fmt.Printf("Failed to create logStream. error: %v\n", err)
+		if !plugin.CheckLogStreamsExistence(configCtx.logGroupName, configCtx.logStreamName) {
+			err := plugin.CreateLogStream(configCtx.logGroupName, configCtx.logStreamName)
+			if err != nil {
+				fmt.Printf("Failed to create logStream. error: %v\n", err)
+			}
 		}
 	}
 
