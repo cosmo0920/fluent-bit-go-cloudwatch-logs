@@ -14,7 +14,6 @@ type cloudwatchLogsConfig struct {
 	logStreamName    *string
 	region           *string
 	autoCreateStream bool
-	stateFile        *string
 }
 
 type CloudWatchLogsCredential interface {
