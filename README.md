@@ -39,7 +39,6 @@ $ make
 | LogStreamName     | logStream name of CloudWatch    | `-`           | Mandatory parameter             |
 | Region            | Region of CloudWatch            | `-`           | Mandatory parameter             |
 | AutoCreateStream  | Use auto create stream feature? | `true`        | Optional parameter              |
-| StateFile         | filepath for saving state       | `""`          | Optional parameter              |
 
 Example:
 
@@ -56,7 +55,6 @@ add this section to fluent-bit.conf
     LogStreamName   yourslogstreamname
     Region us-east-1
     # AutoCreateStream false # default: true
-    # StateFile     yourstatefile
 ```
 
 fluent-bit-go-cloudwatch-logs supports the following credentials. Users must specify one of them:
