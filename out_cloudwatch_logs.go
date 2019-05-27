@@ -24,8 +24,13 @@ type cloudWatchLogsConf struct {
 	autoCreateStream bool
 }
 
+type updateToken struct {
+	logGroup  string
+	logStream string
+}
+
 var configCtx *cloudWatchLogsConf
-var sequenceTokenCtx = ""
+var sequenceTokensCtx map[updateToken]string
 
 type GoOutputPlugin interface {
 	PluginConfigKey(ctx unsafe.Pointer, key string) string
@@ -253,7 +258,8 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 
 	if configCtx.autoCreateStream {
 		if doesExist, nextToken := plugin.CheckLogStreamsExistence(configCtx.logGroupName, configCtx.logStreamName); doesExist {
-			sequenceTokenCtx = nextToken
+			sequenceTokensCtx = make(map[updateToken]string)
+			sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}] = nextToken
 		} else {
 			err := plugin.CreateLogStream(configCtx.logGroupName, configCtx.logStreamName)
 			if err != nil {
@@ -297,12 +303,12 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 			continue
 		}
 
-		resp, err := plugin.Put(timestamp, line, sequenceTokenCtx)
+		resp, err := plugin.Put(timestamp, line, sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}])
 		if err != nil {
 			fmt.Printf("error sending message for S3: %v\n", err)
 			return output.FLB_RETRY
 		}
-		sequenceTokenCtx = nextSequenceToken(resp)
+		sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}] = nextSequenceToken(resp)
 	}
 
 	// Return options:
