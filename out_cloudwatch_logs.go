@@ -228,8 +228,8 @@ func FLBPluginInit(ctx unsafe.Pointer) int {
 		return output.FLB_ERROR
 	}
 	fmt.Printf("[flb-go] plugin credential parameter = '%s'\n", credential)
-	fmt.Printf("[flb-go] plugin accessKeyID parameter = '%s'\n", accessKeyID)
-	fmt.Printf("[flb-go] plugin secretAccessKey parameter = '%s'\n", secretAccessKey)
+	fmt.Printf("[flb-go] plugin accessKeyID parameter = '%s'\n", secretConfig(accessKeyID))
+	fmt.Printf("[flb-go] plugin secretAccessKey parameter = '%s'\n", secretConfig(secretAccessKey))
 	fmt.Printf("[flb-go] plugin logGroupName parameter = '%s'\n", logGroupName)
 	fmt.Printf("[flb-go] plugin logStreamName parameter = '%s'\n", logStreamName)
 	fmt.Printf("[flb-go] plugin region parameter = '%s'\n", region)
@@ -317,6 +317,14 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 	// output.FLB_ERROR = unrecoverable error, do not try this again.
 	// output.FLB_RETRY = retry to flush later.
 	return output.FLB_OK
+}
+
+func secretConfig(parameter string) string {
+	if parameter != "" {
+		return "xxxxxx"
+	} else {
+		return ""
+	}
 }
 
 func nextSequenceToken(response *cloudwatchlogs.PutLogEventsOutput) string {

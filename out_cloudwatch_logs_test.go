@@ -33,6 +33,18 @@ func TestCreateJSON(t *testing.T) {
 	assert.Equal(t, result["number"], float64(8))
 }
 
+func TestSecretConfig(t *testing.T) {
+	parameter := "The secret parameter"
+	result := secretConfig(parameter)
+
+	assert.Equal(t, result, "xxxxxx")
+
+	emptyStringParameter := ""
+	result = secretConfig(emptyStringParameter)
+
+	assert.Equal(t, result, "")
+}
+
 type testrecord struct {
 	rc   int
 	ts   interface{}
