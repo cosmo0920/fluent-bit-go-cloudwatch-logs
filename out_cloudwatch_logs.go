@@ -299,13 +299,13 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 
 		line, err := createJSON(record)
 		if err != nil {
-			fmt.Printf("error creating message for S3: %v\n", err)
+			fmt.Printf("error creating message for CloudWatchLogs: %v\n", err)
 			continue
 		}
 
 		resp, err := plugin.Put(timestamp, line, sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}])
 		if err != nil {
-			fmt.Printf("error sending message for S3: %v\n", err)
+			fmt.Printf("error sending message for CloudWatchLogs:: %v\n", err)
 			return output.FLB_RETRY
 		}
 		sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}] = nextSequenceToken(resp)
