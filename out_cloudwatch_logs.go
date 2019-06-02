@@ -305,7 +305,10 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 
 		resp, err := plugin.Put(timestamp, line, sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}])
 		if err != nil {
-			fmt.Printf("error sending message for CloudWatchLogs:: %v\n", err)
+			fmt.Printf("error sending message for CloudWatchLogs: %v\n", err)
+			if rejectedEvent := resp.RejectedLogEventsInfo; rejectedEvent != nil {
+				fmt.Printf("Rejected Event: %s\n", rejectedEvent.GoString())
+			}
 			return output.FLB_RETRY
 		}
 		sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}] = nextSequenceToken(resp)
