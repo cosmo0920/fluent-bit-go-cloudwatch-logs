@@ -98,10 +98,12 @@ func (p *testFluentPlugin) GetRecord(dec *output.FLBDecoder) (int, interface{}, 
 }
 func (p *testFluentPlugin) NewDecoder(data unsafe.Pointer, length int) *output.FLBDecoder { return nil }
 func (p *testFluentPlugin) Exit(code int)                                                 {}
-func (p *testFluentPlugin) Put(timestamp time.Time, line string, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error) {
-	data := ([]byte)(line)
-	events := &events{data: data}
-	p.events = append(p.events, events)
+func (p *testFluentPlugin) Put(logEvents []*cloudwatchlogs.InputLogEvent, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error) {
+	for _, logEvent := range logEvents {
+		data := ([]byte)(*logEvent.Message)
+		events := &events{data: data}
+		p.events = append(p.events, events)
+	}
 	return nil, nil
 }
 

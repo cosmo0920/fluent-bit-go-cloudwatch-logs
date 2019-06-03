@@ -37,7 +37,7 @@ type GoOutputPlugin interface {
 	Unregister(ctx unsafe.Pointer)
 	GetRecord(dec *output.FLBDecoder) (ret int, ts interface{}, rec map[interface{}]interface{})
 	NewDecoder(data unsafe.Pointer, length int) *output.FLBDecoder
-	Put(timestamp time.Time, line, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error)
+	Put(logEvents []*cloudwatchlogs.InputLogEvent, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error)
 	CheckLogGroupsExistence(logGroupName string) bool
 	CheckLogStreamsExistence(logGroupName, logStreamName string) (bool, string)
 	CreateLogGroup(logGroupName string) error
@@ -67,16 +67,9 @@ func (p *fluentPlugin) Exit(code int) {
 	os.Exit(code)
 }
 
-func (p *fluentPlugin) Put(timestamp time.Time, line string, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error) {
-	t := aws.TimeUnixMilli(timestamp)
+func (p *fluentPlugin) Put(logEvents []*cloudwatchlogs.InputLogEvent, sequenceToken string) (*cloudwatchlogs.PutLogEventsOutput, error) {
 	params := &cloudwatchlogs.PutLogEventsInput{
-		LogEvents: []*cloudwatchlogs.InputLogEvent{ // Mandatory
-			&cloudwatchlogs.InputLogEvent{ // Mandatory
-				Message:   aws.String(line), // Mandatory
-				Timestamp: aws.Int64(t),     // Mandatory
-			},
-			// More values
-		},
+		LogEvents: logEvents,
 		LogGroupName:  aws.String(configCtx.logGroupName),  // Mandatory
 		LogStreamName: aws.String(configCtx.logStreamName), // Mandatory
 	}
@@ -276,6 +269,7 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 	var ret int
 	var ts interface{}
 	var record map[interface{}]interface{}
+	var events []*cloudwatchlogs.InputLogEvent
 
 	dec := plugin.NewDecoder(data, int(length))
 
@@ -303,16 +297,22 @@ func FLBPluginFlush(data unsafe.Pointer, length C.int, tag *C.char) int {
 			continue
 		}
 
-		resp, err := plugin.Put(timestamp, line, sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}])
-		if err != nil {
-			fmt.Printf("error sending message for CloudWatchLogs: %v\n", err)
-			if rejectedEvent := resp.RejectedLogEventsInfo; rejectedEvent != nil {
-				fmt.Printf("Rejected Event: %s\n", rejectedEvent.GoString())
-			}
-			return output.FLB_RETRY
-		}
-		sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}] = nextSequenceToken(resp)
+		t := aws.TimeUnixMilli(timestamp)
+		events = append(events, &cloudwatchlogs.InputLogEvent{ // Mandatory
+			Message:   aws.String(line), // Mandatory
+			Timestamp: aws.Int64(t),     // Mandatory
+		})
 	}
+
+	resp, err := plugin.Put(events, sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}])
+	if err != nil {
+		fmt.Printf("error sending message for CloudWatchLogs: %v\n", err)
+		if rejectedEvent := resp.RejectedLogEventsInfo; rejectedEvent != nil {
+			fmt.Printf("Rejected Event: %s\n", rejectedEvent.GoString())
+		}
+		return output.FLB_RETRY
+	}
+	sequenceTokensCtx[updateToken{configCtx.logGroupName, configCtx.logStreamName}] = nextSequenceToken(resp)
 
 	// Return options:
 	//
